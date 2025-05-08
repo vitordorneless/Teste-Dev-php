@@ -27,7 +27,7 @@ class ClientsController extends Controller
                 ->get()
                 ->paginate(10);
         } else {
-            $clients = Clients::all();
+            $clients = Clients::all()->paginate(10);
         }
 
         return response()->json([
