@@ -15,6 +15,6 @@ use App\Http\Controllers\ClientsController;
 |
 */
 
-Route::apiResource('clientes', ClientsController::class)->only([
+Route::apiResource('clients', ClientsController::class)->only([
     'index', 'show', 'store', 'update', 'destroy'
 ]);
