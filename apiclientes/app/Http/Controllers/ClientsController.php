@@ -40,24 +40,33 @@ class ClientsController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'doc_number' => 'required|string|max:255|unique:clients',
-            'email' => 'required|string|email|max:255|unique:clients',
-            'phone' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:255',
-            'district' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'state' => 'nullable|string|max:255',
-            'zip_code' => 'nullable|string|max:10'
-        ]);
+        $doc_number = $this->validateDocNumber($client->doc_number) == true ? 1 : 0;
+        $zip_code = $this->validateZipCode($client->zip_code) == true ? 1 : 0;
+
+        if($doc_number == 1 && $zip_code == 1) {
+            $data = $request->validate([
+                'full_name' => 'required|string|max:255',
+                'doc_number' => 'required|string|max:255|unique:clients',
+                'email' => 'required|string|email|max:255|unique:clients',
+                'phone' => 'nullable|string|max:255',
+                'address' => 'nullable|string|max:255',
+                'district' => 'nullable|string|max:255',
+                'city' => 'nullable|string|max:255',
+                'state' => 'nullable|string|max:255',
+                'zip_code' => 'nullable|string|max:10'
+            ]);
         
-        $client = Clients::create($data);
+            $client = Clients::create($data);
         
-        return response()->json([
-            'message' => 'Client created successfully',
-            'data' => $client
-        ], JsonResponse::HTTP_CREATED);
+            return response()->json([
+                'message' => 'Client created successfully',
+                'data' => $client
+            ], JsonResponse::HTTP_CREATED);
+        } else {
+            return response()->json([
+                'message' => 'Invalid document number or zip code'
+            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
     }
 
     /**
@@ -111,7 +120,7 @@ class ClientsController extends Controller
         ]);
     } else {
             return response()->json([
-                'message' => 'Invalid document number'
+                'message' => 'Invalid document number or zip code'
             ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
         }
     }

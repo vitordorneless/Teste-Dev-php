@@ -15,10 +15,6 @@ use App\Http\Controllers\ClientsController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
-Route::apiResource('clients', ClientsController::class)->only([
+Route::apiResource('clientes', ClientsController::class)->only([
     'index', 'show', 'store', 'update', 'destroy'
 ]);
