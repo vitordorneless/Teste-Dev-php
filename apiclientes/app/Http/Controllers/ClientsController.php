@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
+use GuzzleHttp\Client;
 
 class ClientsController extends Controller
 {
@@ -86,17 +87,21 @@ class ClientsController extends Controller
     {
         $client = Clients::findOrFail($id);
         
-        $data = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'doc_number' => 'required|string|max:255|unique:clients,doc_number,' . $client->id,
-            'email' => 'required|string|email|max:255|unique:clients,email,' . $client->id,
-            'phone' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:255',
-            'district' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'state' => 'nullable|string|max:255',
-            'zip_code' => 'nullable|string|max:10'
-        ]);
+        $doc_number = $this->validateDocNumber($client->doc_number) == true ? 1 : 0;
+        $zip_code = $this->validateZipCode($client->zip_code) == true ? 1 : 0;
+
+        if($doc_number == 1 && $zip_code == 1) {
+            $data = $request->validate([
+                'full_name' => 'required|string|max:255',
+                'doc_number' => 'required|string|max:255|unique:clients,doc_number,' . $client->id,
+                'email' => 'required|string|email|max:255|unique:clients,email,' . $client->id,
+                'phone' => 'nullable|string|max:255',
+                'address' => 'nullable|string|max:255',
+                'district' => 'nullable|string|max:255',
+                'city' => 'nullable|string|max:255',
+                'state' => 'nullable|string|max:255',
+                'zip_code' => 'nullable|string|max:10'
+            ]);
         
         $client->update($data);
         
@@ -104,6 +109,11 @@ class ClientsController extends Controller
             'message' => 'Client updated successfully',
             'data' => $client
         ]);
+    } else {
+            return response()->json([
+                'message' => 'Invalid document number'
+            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
     }
 
     /**
@@ -116,5 +126,43 @@ class ClientsController extends Controller
         return response()->json([
             'message' => 'Client deleted successfully'
         ], JsonResponse::HTTP_NO_CONTENT);
+    }
+
+    private function validateZipCode($zip_code)
+    {
+        $client = new Client();
+        $response = $client->get("https://viacep.com.br/ws/{$zip_code}/json/");
+        $data = json_decode($response->getBody(), true);
+        if ($data['codigo'] <> 200) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function validateDocNumber($doc_number)
+    {
+        $cpf = preg_replace( '/[^0-9]/is', '', $cpf );
+    
+        if (strlen($cpf) != 11) {
+            return false;
+        }
+    
+        if (preg_match('/(\d)\1{10}/', $cpf)) {
+            return false;
+        }
+    
+        for ($t = 9; $t < 11; $t++) {
+            for ($d = 0, $c = 0; $c < $t; $c++) {
+                $d += $cpf[$c] * (($t + 1) - $c);
+            }
+            
+            $d = ((10 * $d) % 11) % 10;
+            
+            if ($cpf[$c] != $d) {            
+                return false;
+            }
+    }
+        return true;
     }
 }
