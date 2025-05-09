@@ -1,71 +1,66 @@
-  # **Teste para Desenvolvedor: API de Cadastro de Clientes com Validação de CEP**
+# **Teste para Desenvolvedor: API de Cadastro de Clientes com Validação de CEP**
 
-O objetivo deste teste é desenvolver uma **API Rest** para o cadastro de clientes, garantindo que o cliente esteja em um CEP valido.
+# Teste Vítor Dorneles Pimentel
 
----
+Teste realizado para ser candidato a vaga de Desenvolvedor.
 
-## **Descrição do Projeto**
+Segue o caminho para deixar a aplicação em funcionamento.
 
-### **Backend (API Laravel)**
+Para o funcionamento do Docker:
 
-#### **Cadastro de Clientes**
-- Criar um cliente com as seguintes informações:
-  - Nome completo
-  - CPF (validado, único no banco)
-  - E-mail (validado, único no banco)
-  - Telefone
-  - CEP 
-  - Endereço (logradouro, bairro, cidade, estado)
+$docker-compose up -d
 
-- Editar um cliente
-- Excluir um cliente
-- Listar clientes (paginação, filtro por nome, CPF e CEP)
+Para começar o MySQL:
 
----
+$docker-compose start
 
-### **Migrations**
-- Utilize migrations do Laravel para definir a estrutura do banco de dados, garantindo uma boa organização e facilidade de manutenção.
+Para o Laravel:
 
----
+$php artisan migrate
 
-### **Requisitos**
-- **Validar CPF** (formato correto e não permitir duplicação).
-- **Validar e-mail** (formato correto e não permitir duplicação).
-- **Validar endereço automaticamente** via [BrasilAPI](https://brasilapi.com.br/docs#tag/CEP-V2) ou qualquer outro endpoint público ao inserir ou atualizar um cliente.
+$php artisan db:seed
 
+## Documentação da API
 
----
+#### Retorna todos os itens
 
-## **Critérios de Avaliação**
-- **Adesão aos requisitos funcionais e técnicos**
-- **Qualidade do código** (organização, padrões, segurança)
-- **Uso adequado do Laravel (migrations, Eloquent, validações, etc.)**
-- **README bem estruturado** com instruções de instalação e uso
+```http
+  GET /api/clients
+```
 
----
+| Parâmetro   | Tipo       | Descrição                           |
+| :---------- | :--------- | :---------------------------------- |
+| `filter` | `string` | para pesquisar CPF, email ou CEP |
 
-## **Tecnologias a serem utilizadas**
-- **PHP 8.x**
-- **Laravel 10.x**
-- **Banco de Dados**: MySQL ou PostgreSQL
+#### Retorna um item
 
----
+```http
+  GET /api/clients/${id}
+```
 
-## **Extra**
-- Implementação do **Repository Pattern**  
-- **Testes automatizados** (unitários ou de integração)  
-- **Dockerização** do ambiente para facilitar a instalação  
-- **Implementação de cache** para otimizar o desempenho 
+| Parâmetro   | Tipo       | Descrição                                   |
+| :---------- | :--------- | :------------------------------------------ |
+| `id`      | `string` | **Obrigatório**. O ID do item que você quer |
 
----
+#### Edita um cliente
 
-## **Entrega**
-1. Faça um **fork** deste repositório.
-2. Crie uma **branch** com o seu nome.
-3. Altere o **README.md** com as instruções para rodar o projeto (comandos necessários, migrations, seeds, etc.).
-4. Após finalizar, envie um **pull request** para avaliação.
+```http
+  PUT /api/clients/${id}
+```
 
----
+| Parâmetro   | Tipo       | Descrição                                   |
+| :---------- | :--------- | :------------------------------------------ |
+| `id`      | `string` | **Obrigatório**. O ID do item que você DESEJA atualizar |
+
+#### Excluir um cliente
+
+```http
+  DELETE /api/clients/${id}
+```
+
+| Parâmetro   | Tipo       | Descrição                                   |
+| :---------- | :--------- | :------------------------------------------ |
+| `id`      | `string` | **Obrigatório**. O ID do item que você DESEJA excluir |
 
 
-Boa sorte! 🚀
+Muito Obrigado.
