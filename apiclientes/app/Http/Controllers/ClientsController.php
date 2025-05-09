@@ -12,6 +12,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use GuzzleHttp\Client;
+use App\Http\Resources\ClientsResource;
 
 class ClientsController extends Controller
 {
@@ -20,28 +21,26 @@ class ClientsController extends Controller
      */
     public function index(Request $request)
     {
-        $query = $request->query('q');
-        if ($query) {
-            $clients = Clients::where('full_name', 'LIKE', "%$query%")
-                ->orWhere('doc_number', 'LIKE', "%$query%")
-                ->orWhere('zip_code', 'LIKE', "%$query%")
-                ->get()
-                ->paginate(10);
+        $filter = $request->query('filter');
+        if ($filter) {
+            $clients = Clients::where('full_name', 'LIKE', "%$filter%")
+                ->orWhere('doc_number', 'LIKE', "%$filter%")
+                ->orWhere('zip_code', 'LIKE', "%$filter%")
+                ->paginate();
         } else {
-            $clients = Clients::all()->paginate(10);
+            $clients = Clients::paginate();
         }
-
-        return response()->json([
-            'data' => $clients
-        ]);
+        return ClientsResource::collection($clients);
     }
+        
+    
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        $doc_number = $this->validateDocNumber($client->doc_number) == true ? 1 : 0;
-        $zip_code = $this->validateZipCode($client->zip_code) == true ? 1 : 0;
+        $doc_number = $this->validateDocNumber($request->doc_number) == true ? 1 : 0;
+        $zip_code = $this->validateZipCode($request->zip_code) == true ? 1 : 0;
 
         if($doc_number == 1 && $zip_code == 1) {
             $data = $request->validate([
@@ -64,8 +63,8 @@ class ClientsController extends Controller
             ], JsonResponse::HTTP_CREATED);
         } else {
             return response()->json([
-                'message' => 'Invalid document number or zip code'
-            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+                'message' => 'Invalid document number or zip code or duplicate document number'
+            ],404);
         }
     }
 
@@ -117,13 +116,13 @@ class ClientsController extends Controller
         return response()->json([
             'message' => 'Client updated successfully',
             'data' => $client
-        ]);
+        ], JsonResponse::HTTP_OK);
     } else {
-            return response()->json([
-                'message' => 'Invalid document number or zip code'
-            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        return response()->json([
+            'message' => 'Invalid document number or zip code or duplicate document number'
+        ])->setStatusCode(JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
     }
+} 
 
     /**
      * Remove the specified resource from storage.
@@ -141,8 +140,8 @@ class ClientsController extends Controller
     {
         $client = new Client();
         $response = $client->get("https://viacep.com.br/ws/{$zip_code}/json/");
-        $data = json_decode($response->getBody(), true);
-        if ($data['codigo'] <> 200) {
+        
+        if ($response->getStatusCode() <> 200) {
             return false;
         }
 
@@ -151,7 +150,7 @@ class ClientsController extends Controller
 
     private function validateDocNumber($doc_number)
     {
-        $cpf = preg_replace( '/[^0-9]/is', '', $cpf );
+        $cpf = preg_replace( '/[^0-9]/is', '', $doc_number);
     
         if (strlen($cpf) != 11) {
             return false;
